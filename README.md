@@ -35,11 +35,17 @@ store.subscribe({
   }
 });
 
+// always remember to call initState() after mountReducer() or subscribe()
+// to ensure reducers has initialized state and listeners has catched the
+// initializaion of state
+store.initState().then(function () {
+  // when code reaches here, console has shown 0
+});
 store.dispatch({ type: 'ADD' }).then(function () {
   // when code reaches here, console has shown 1
 });
 store.dispatch({ type: 'ADD' }).then(function () {
-  // when code reaches here, console has shown 1 and 2
+  // when code reaches here, console has shown 2
 });
 ```
 
@@ -94,7 +100,7 @@ store.subscribe({
   }
 });
 
-store.dispatch({ type: 'SEE_ERROR' }).catch(function (e) {
+store.initState().catch(function (e) {
   console.log(e); // show error
 });
 ```
@@ -118,19 +124,19 @@ unmount2 = store.mountReducer({
   }
 });
 
-store.dispatch({ type: 'INIT' }).then(() => {
+store.initState().then(() => {
   console.log(store.getState()); // { foo: 0, bar: { x: 0, y: 0 } }
 });
 
 unmount2();
-store.dispatch({ type: 'INIT' }).then(() => {
+store.initState().then(() => {
   console.log(store.getState()); // { foo: 0, bar: { x: 0 } }
 });
 ```
 
 ### _smart notifying_
 
-Only notify listeners when states to which they are listening have changed.
+Only notify listeners when states have been changed.
 
 ```javascript
 store.mountReducer({
@@ -148,10 +154,10 @@ store.subscribe({
   }
 });
 
-store.dispatch({ type: 'INIT' }).then(function () {
+store.initState().then(function () {
   // foo is from undefined to 0, changed, so meet foo's value here
 });
-store.dispatch({ type: 'INIT' }).then(function () {
+store.initState().then(function () {
   // foo is not changed, so won't meet foo's value here
 });
 store.dispatch({ type: 'ADD' }).then(function () {
@@ -159,5 +165,91 @@ store.dispatch({ type: 'ADD' }).then(function () {
 });
 
 // furtherly, listen to state with dynamic reducers
+store.subscribe({
+  bar: function (bar) {
+    console.log(bar);
+  }
+});
+store.initState().then(function () {
+  // bar is still undefined, not changed, so won't meet bar's value here
+});
 
+unmount = store.mountReducer({
+  bar: function (bar = 0, action) {
+    return bar;
+  }
+});
+store.initState().then(function () {
+  // bar is from undefined to 0, changed, so meet bar's value here
+});
+
+unmount();
+store.initState().then(function () {
+  // bar is from 0 to undefined, changed, so meet bar's value here
+});
+```
+
+### _hierarchical listeners_
+
+Listen to different layers easily.
+
+```javascript
+store.mountReducer({
+  foo: function (foo = 0, action) {
+    switch (action.type) {
+      case 'ADD': return ++foo;
+      default: return foo;
+    }
+  },
+  bar: function (bar = 0, action) {
+    return bar;
+  }
+});
+
+store.subscribe({
+  bar: function (bar) {
+    console.log(bar);
+  }
+});
+store.subscribe(function (state) {
+  console.log(state);
+});
+
+store.initState().then(() => {
+  // show 0 and { foo: 0, bar: 0 }
+});
+store.dispatch({ type: 'ADD' }).then(() => {
+  // only show { foo: 1, bar: 0 }
+});
+```
+
+## Middlewares
+
+Support middlewares in dispatching. Pass them when you call `createStore()`. Additionally, Promise is supported in middlewares(This should be clear because `next` always return a Promise object as you will see).
+
+```javascript
+let middlewares = [
+  function (action, next) {
+    if (action.type == 'SHORTCUT') {
+      return action;
+    }
+    return next(action);
+  },
+  function (action, next) {
+    console.log('before');
+    // next always returns a Promise object
+    return next(action).then((action) => {
+      console.log('after');
+      return action;
+    });
+  }
+];
+
+let store = createStore(middlewares);
+store.initState().then(function () {
+  // show before and after
+});
+store.dispatch('SHORTCUT').then(function () {
+  // show nothing
+});
 ```
