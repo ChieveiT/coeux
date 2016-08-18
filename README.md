@@ -1,5 +1,9 @@
 # coeux
 
+[![Build Status](https://travis-ci.org/ChieveiT/coeux.svg?branch=master)](https://travis-ci.org/ChieveiT/coeux)
+[![npm version](https://img.shields.io/npm/v/coeux.svg?style=flat-square)](https://www.npmjs.com/package/coeux)
+[![npm downloads](https://img.shields.io/npm/dm/coeux.svg?style=flat-square)](https://www.npmjs.com/package/coeux)
+
 Coeux is a state manager to build clean data flow like [redux](http://redux.js.org/index.html). In fact, it is inspired by redux. The biggest difference from redux is that coeux supports Promise in reducers and listeners.
 
 ## Install
