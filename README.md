@@ -249,7 +249,7 @@ let store = createStore(middlewares);
 store.initState().then(function () {
   // show before and after
 });
-store.dispatch('SHORTCUT').then(function () {
+store.dispatch({ type: 'SHORTCUT' }).then(function () {
   // show nothing
 });
 ```
