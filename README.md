@@ -257,3 +257,7 @@ store.dispatch({ type: 'SHORTCUT' }).then(function () {
   // show nothing
 });
 ```
+
+## Performance
+
+Everything would be OK if you are trying to keep state shape as flat as possible. You might have noticed that `mountReducer()` maintains a tree with reducer functions as its leaves. Internally, it uses a depth-first tree merging algorithm. The deeper reducer tree is, the more overhead it pays. Accordingly, `unmount()` function returned by `mountReducer()` preforms similarly.
