@@ -584,33 +584,52 @@ describe('createStore', () => {
   it('guarantees atomicity and sequence of dispatching', () => {
     const store = createStore();
 
+    let p1, p2;
     store.mountReducer({
       foo: (foo, { type }) => {
-        if (type == 'FOO') {
-          return 2;
+        if (foo === undefined) {
+          p1 = store.dispatch({ type: 'FOO' });
+
+          return [ 1 ];
         }
 
-        store.dispatch({ type: 'FOO' });
-
-        return 1;
+        switch(type) {
+          case 'FOO':
+            return [ ...foo, 2 ];
+          default:
+            return foo;
+        }
       },
       bar: (bar, { type }) => {
-        if (type == 'BAR') {
-          return 10;
+        if (bar === undefined) {
+          setTimeout(() => {
+            p2 = store.dispatch({ type: 'BAR' });
+          }, 10);
+
+          return new Promise(function (resolve) {
+            setTimeout(() => resolve([ 20 ]), 20);
+          });
         }
 
-        setTimeout(() => store.dispatch({
-          type: 'BAR'
-        }), 10);
-
-        return new Promise(function (resolve) {
-          setTimeout(() => resolve(20), 20);
-        });
+        switch(type) {
+          case 'BAR':
+            return [ ...bar, 10 ];
+          default:
+            return bar;
+        }
       }
     });
 
     return store.initState().then(() => {
-      expect(store.getState()).toEqual({ foo: 1, bar: 20 });
+      expect(store.getState()).toEqual({ foo: [ 1 ], bar: [ 20 ] });
+
+      return p1;
+    }).then(() => {
+      expect(store.getState().foo).toEqual([ 1, 2 ]);
+
+      return p2;
+    }).then(() => {
+      expect(store.getState().bar).toEqual([ 20, 10 ]);
     });
   });
 });
