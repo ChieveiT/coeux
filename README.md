@@ -55,7 +55,7 @@ store.dispatch({ type: 'ADD' }).then(function () {
 
 ## Sequence
 
-We should care about sequence once async operations is supported in dispatching. Take two points in your mind:
+We should care about sequence when async operations is supported in dispatching. Take two points in your mind:
 
 1. No absolute sequence between any two reducers or listeners.
 2. `store.dispatch()` runs in an atomic cycle. A `store.dispatch()` in another `store.dispatch()` will never mess the reducing sequence for the state.
