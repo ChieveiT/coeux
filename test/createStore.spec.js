@@ -424,53 +424,6 @@ describe('createStore', () => {
     });
   });
 
-  it('guarantees the sequence of dispatching', () => {
-    const store = createStore();
-
-    store.mountReducer({
-      foo: (state = 0, action) => {
-        switch (action.type) {
-          case 'wait100':
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(100);
-              }, 100);
-            });
-          case 'wait50':
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(50);
-              }, 50);
-            });
-          case 'now':
-            return 10;
-          default:
-            return state;
-        }
-      }
-    });
-
-    let trace = [];
-
-    return store.initState().then(() => {
-      store.dispatch({ type: 'wait100' }).then(() => {
-        trace.push(store.getState());
-      });
-      store.dispatch({ type: 'now' }).then(() => {
-        trace.push(store.getState());
-      });
-      return store.dispatch({ type: 'wait50' }).then(() => {
-        trace.push(store.getState());
-      });
-    }).then(() => {
-      expect(trace).toEqual([
-        { foo: 100 },
-        { foo: 10 },
-        { foo: 50 }
-      ]);
-    });
-  });
-
   it('throws error if mountReducer doesn\'t ' +
     'receive a plain object or function', () => {
     const store = createStore();
@@ -625,6 +578,39 @@ describe('createStore', () => {
       expect(action).toEqual({
         type: 'hack_return'
       });
+    });
+  });
+
+  it('guarantees atomicity and sequence of dispatching', () => {
+    const store = createStore();
+
+    store.mountReducer({
+      foo: (foo, { type }) => {
+        if (type == 'FOO') {
+          return 2;
+        }
+
+        store.dispatch({ type: 'FOO' });
+
+        return 1;
+      },
+      bar: (bar, { type }) => {
+        if (type == 'BAR') {
+          return 10;
+        }
+
+        setTimeout(() => store.dispatch({
+          type: 'BAR'
+        }), 10);
+
+        return new Promise(function (resolve) {
+          setTimeout(() => resolve(20), 20);
+        });
+      }
+    });
+
+    return store.initState().then(() => {
+      expect(store.getState()).toEqual({ foo: 1, bar: 20 });
     });
   });
 });
