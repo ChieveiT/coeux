@@ -57,29 +57,51 @@ store.dispatch({ type: 'ADD' }).then(function () {
 
 We should care about sequence once async operations is supported in dispatching. Take two points in your mind:
 
-1. In internals, `store.dispatch()` has two periods. First it reduces state, then it notifies listeners. Both two periods use [`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) to wrap returned values. _So there is no constant sequence within reducers and listeners_. However, reducing and notifying is chained with [`Promise.then()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then). _So listeners always get state after state has been changed by actions_.
-2. `store.dispatch()` chains itself automatically. Don't worry.
+1. No absolute sequence between any two reducers or listeners.
+2. `store.dispatch()` runs in an atomic cycle. A `store.dispatch()` in another `store.dispatch()` will never mess the reducing sequence for the state.
 
 ```javascript
-store.dispatch({ type: 'action1' });
-store.dispatch({ type: 'action2' });
-// is equal to
-store.dispatch({ type: 'action1' }).then(() => {
-  store.dispatch({ type: 'action1' });
+store.mountReducer({
+  foo: (foo, { type }) => {
+    if (foo === undefined) {
+      store.dispatch({ type: 'FOO' }).then(() => {
+        // see foo as [ 1, 2 ] here
+      });
+
+      return [ 1 ];
+    }
+
+    switch (type) {
+      case 'FOO':
+        return [ ...foo, 2 ];
+      default:
+        return foo;
+    }
+  },
+  bar: (bar, { type }) => {
+    if (bar === undefined) {
+      setTimeout(() => {
+        store.dispatch({ type: 'BAR' }).then(() => {
+          // see bar as [ 20, 10 ] here
+        });
+      }, 10);
+
+      return new Promise(function (resolve) {
+        setTimeout(() => resolve([ 20 ]), 20);
+      });
+    }
+
+    switch (type) {
+      case 'BAR':
+        return [ ...bar, 10 ];
+      default:
+        return bar;
+    }
+  }
 });
 
-// furtherly
-store.dispatch({ type: 'action1' }).then(() => {
-  store.dispatch({ type: 'action3' });
-});
-store.dispatch({ type: 'action2' });
-// is equal to
-let p = store.dispatch({ type: 'action1' });
-p.then(() => {
-  store.dispatch({ type: 'action3' });
-});
-p.then(() => {
-  store.dispatch({ type: 'action2' });
+store.initState().then(() => {
+  // see the whole state as { foo: [ 1 ], bar: [ 20 ] } here
 });
 ```
 
