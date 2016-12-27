@@ -205,25 +205,22 @@ describe('createStore', () => {
       rootState = state;
     }).andCallThrough();
 
-    let barState = null;
-    const bar = expect.createSpy((state) => {
-      barState = state;
-    }).andCallThrough();
-
     let xState = null;
     const x = expect.createSpy((state) => {
       xState = state;
     }).andCallThrough();
 
-    let yState = null;
-    const y = expect.createSpy((state) => {
-      yState = state;
+    let fooAndYState = null;
+    const fooAndY = expect.createSpy((state) => {
+      fooAndYState = state;
     }).andCallThrough();
 
     store.subscribe(root);
-    store.subscribe({ bar });
     store.subscribe({ bar: { x } });
-    store.subscribe({ bar: { y } });
+    store.subscribe({
+      foo: 'fooTag',
+      y: 'yTag'
+    }, fooAndY);
 
     unmount1 = store.mountReducer({
       bar: {
@@ -233,31 +230,26 @@ describe('createStore', () => {
 
     return store.initState().then(() => {
       expect(root.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(1);
       expect(x.calls.length).toEqual(1);
-      expect(y.calls.length).toEqual(0);
+      expect(fooAndY.calls.length).toEqual(0);
 
       expect(rootState).toEqual({ bar: { x: 1 } });
-      expect(barState).toEqual({ x: 1 });
       expect(xState).toEqual(1);
 
       unmount2 = store.mountReducer({
-        bar: {
-          y: (state = 0) => state
-        }
+        foo: (state = 0) => state,
+        y: (state = 0) => state
       });
 
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(2);
-      expect(bar.calls.length).toEqual(2);
       expect(x.calls.length).toEqual(2);
-      expect(y.calls.length).toEqual(1);
+      expect(fooAndY.calls.length).toEqual(1);
 
-      expect(rootState).toEqual({ bar: { x: 2, y: 0 } });
-      expect(barState).toEqual({ x: 2, y: 0 });
+      expect(rootState).toEqual({ bar: { x: 2 }, foo: 0, y: 0 });
       expect(xState).toEqual(2);
-      expect(yState).toEqual(0);
+      expect(fooAndYState).toEqual({ fooTag: 0, yTag: 0 });
 
       unmount3 = store.mountReducer({
         z: (state = 0) => state
@@ -266,54 +258,46 @@ describe('createStore', () => {
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(3);
-      expect(bar.calls.length).toEqual(3);
       expect(x.calls.length).toEqual(3);
-      expect(y.calls.length).toEqual(1);
+      expect(fooAndY.calls.length).toEqual(1);
 
-      expect(rootState).toEqual({ bar: { x: 3, y: 0 }, z: 0 });
-      expect(barState).toEqual({ x: 3, y: 0 });
+      expect(rootState).toEqual({ bar: { x: 3 }, foo: 0, y: 0, z: 0 });
       expect(xState).toEqual(3);
-      expect(yState).toEqual(0);
+      expect(fooAndYState).toEqual({ fooTag: 0, yTag: 0 });
 
       unmount1();
 
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(4);
-      expect(bar.calls.length).toEqual(4);
       expect(x.calls.length).toEqual(4);
-      expect(y.calls.length).toEqual(1);
+      expect(fooAndY.calls.length).toEqual(1);
 
-      expect(rootState).toEqual({ bar: { y: 0 }, z: 0 });
-      expect(barState).toEqual({ y: 0 });
+      expect(rootState).toEqual({ foo: 0, y: 0, z: 0 });
       expect(xState).toEqual(undefined);
-      expect(yState).toEqual(0);
+      expect(fooAndYState).toEqual({ fooTag: 0, yTag: 0 });
 
       unmount2();
 
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(5);
-      expect(bar.calls.length).toEqual(5);
       expect(x.calls.length).toEqual(4);
-      expect(y.calls.length).toEqual(2);
+      expect(fooAndY.calls.length).toEqual(2);
 
       expect(rootState).toEqual({ z: 0 });
-      expect(barState).toEqual(undefined);
       expect(xState).toEqual(undefined);
-      expect(yState).toEqual(undefined);
+      expect(fooAndYState).toEqual({});
 
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(5);
-      expect(bar.calls.length).toEqual(5);
       expect(x.calls.length).toEqual(4);
-      expect(y.calls.length).toEqual(2);
+      expect(fooAndY.calls.length).toEqual(2);
 
       expect(rootState).toEqual({ z: 0 });
-      expect(barState).toEqual(undefined);
       expect(xState).toEqual(undefined);
-      expect(yState).toEqual(undefined);
+      expect(fooAndYState).toEqual({});
 
       // double subscribe
       store.subscribe(root);
@@ -321,14 +305,12 @@ describe('createStore', () => {
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(6);
-      expect(bar.calls.length).toEqual(5);
       expect(x.calls.length).toEqual(4);
-      expect(y.calls.length).toEqual(2);
+      expect(fooAndY.calls.length).toEqual(2);
 
       expect(rootState).toEqual({ z: 0 });
-      expect(barState).toEqual(undefined);
       expect(xState).toEqual(undefined);
-      expect(yState).toEqual(undefined);
+      expect(fooAndYState).toEqual({});
 
       // trible subscribe
       store.subscribe(root);
@@ -338,14 +320,42 @@ describe('createStore', () => {
       return store.initState();
     }).then(() => {
       expect(root.calls.length).toEqual(8);
-      expect(bar.calls.length).toEqual(5);
       expect(x.calls.length).toEqual(4);
-      expect(y.calls.length).toEqual(2);
+      expect(fooAndY.calls.length).toEqual(2);
 
       expect(rootState).toEqual(undefined);
-      expect(barState).toEqual(undefined);
       expect(xState).toEqual(undefined);
-      expect(yState).toEqual(undefined);
+      expect(fooAndYState).toEqual({});
+
+      store.mountReducer({
+        y: (state = 0) => state
+      });
+
+      return store.initState();
+    }).then(() => {
+      expect(root.calls.length).toEqual(11);
+      expect(x.calls.length).toEqual(4);
+      expect(fooAndY.calls.length).toEqual(3);
+
+      expect(rootState).toEqual({ y: 0 });
+      expect(xState).toEqual(undefined);
+      expect(fooAndYState).toEqual({ yTag: 0 });
+
+      // double subscribe
+      store.subscribe({
+        foo: 'fooTag',
+        y: 'yTag'
+      }, fooAndY);
+
+      return store.initState();
+    }).then(() => {
+      expect(root.calls.length).toEqual(11);
+      expect(x.calls.length).toEqual(4);
+      expect(fooAndY.calls.length).toEqual(4);
+
+      expect(rootState).toEqual({ y: 0 });
+      expect(xState).toEqual(undefined);
+      expect(fooAndYState).toEqual({ yTag: 0 });
     });
   });
 
@@ -466,23 +476,6 @@ describe('createStore', () => {
         bar: (state) => state
       });
     }).toNotThrow();
-  });
-
-  it('throws error if subscribe doesn\'t ' +
-    'receive a plain object or function', () => {
-    const store = createStore();
-
-    expect(() => {
-      store.subscribe(233);
-    }).toThrow(/Expected listener/);
-
-    expect(() => {
-      store.subscribe('233');
-    }).toThrow(/Expected listener/);
-
-    expect(() => {
-      store.subscribe([ 123, '233' ]);
-    }).toThrow(/Expected listener/);
   });
 
   it('throws error if dispatch receives an invalid action', () => {

@@ -7,6 +7,7 @@ import intersection from 'lodash/intersection';
 import difference from 'lodash/difference';
 import combineReducers from './combineReducers';
 import combineSubscribers from './combineSubscribers';
+import multiplexSubscriber from './multiplexSubscriber';
 
 // Hack an additional "root" node to make some convience.
 //
@@ -31,7 +32,7 @@ export default function createStore(middlewares) {
   let currentState = {/* root: undefined*/};
   let currentReducer = initReducer;
   let currentReducerTree = {};
-  let currentListeners = [];
+  let currentSubscribers = [];
   let previousDispatch = Promise.resolve();
 
   function getState() {
@@ -117,16 +118,28 @@ export default function createStore(middlewares) {
     };
   }
 
-  function subscribe(listener) {
-    if (typeof listener !== 'function' && !isPlainObject(listener)) {
+  function subscribe(...listener) {
+    let resultSubscriber = null;
+
+    if (listener.length === 1) {
+      // combineSubscribers
+      let [ subscriber ] = listener;
+
+      subscriber = hack(subscriber);
+      resultSubscriber = combineSubscribers(subscriber);
+    } else if (listener.length === 2) {
+      // multiplexSubscriber
+      let [ target, subscriber ] = listener;
+
+      target = hack(target);
+      resultSubscriber = multiplexSubscriber(target, subscriber);
+    } else {
       throw new Error(
-        'Expected listener to be a function or a plain object.'
+        'Unexpected arguments.'
       );
     }
 
-    listener = hack(listener);
-
-    currentListeners.push(combineSubscribers(listener));
+    currentSubscribers.push(resultSubscriber);
 
     let unsubscribed = false;
     return function unsubscribe() {
@@ -134,8 +147,8 @@ export default function createStore(middlewares) {
         return;
       }
 
-      let index = currentListeners.indexOf(listener);
-      currentListeners.splice(index, 1);
+      let index = currentSubscribers.indexOf(resultSubscriber);
+      currentSubscribers.splice(index, 1);
 
       unsubscribed = true;
     };
@@ -165,7 +178,7 @@ export default function createStore(middlewares) {
 
           // copy a listeners list to avoid the effect of
           // unsubscribing in listeners
-          let listeners = currentListeners.slice();
+          let listeners = currentSubscribers.slice();
           let promises = [];
 
           forEach(listeners, (listener) => {
