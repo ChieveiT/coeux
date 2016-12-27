@@ -5,8 +5,8 @@ describe('multiplexSubscriber', () => {
   it('returns a multiplex subscriber that ' +
     'will be notified once a tag of target has been changed', () => {
     let traceState = [];
-    const tracer = expect.createSpy(({ fooTag, barTag }) => {
-      traceState.push({ fooTag, barTag });
+    const tracer = expect.createSpy((state) => {
+      traceState.push(state);
     }).andCallThrough();
 
     const subscriber = multiplexSubscriber({
@@ -18,17 +18,26 @@ describe('multiplexSubscriber', () => {
       }
     }, tracer);
 
-    subscriber({ foo: 4, bar: { bar: { bar: 5 } } });
+    subscriber({ foo: 4 });
 
     expect(tracer.calls.length).toEqual(1);
-    expect(traceState).toEqual([{ fooTag: 4, barTag: 5 }]);
+    expect(traceState).toEqual([{ fooTag: 4 }]);
 
     subscriber({ foo: 4, bar: { bar: { bar: 6 } } });
 
     expect(tracer.calls.length).toEqual(2);
     expect(traceState).toEqual([
-      { fooTag: 4, barTag: 5 },
+      { fooTag: 4 },
       { fooTag: 4, barTag: 6 }
+    ]);
+
+    subscriber({ bar: { bar: { bar: 6 } } });
+
+    expect(tracer.calls.length).toEqual(3);
+    expect(traceState).toEqual([
+      { fooTag: 4},
+      { fooTag: 4, barTag: 6 },
+      { barTag: 6 }
     ]);
   });
 

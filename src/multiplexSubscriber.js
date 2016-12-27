@@ -32,7 +32,15 @@ export default function multiplexSubscriber(target, subscriber) {
 
         // create a leaf tracer
         keyTracers[key] = function(tags, value) {
-          return { ...tags, [tag]: value };
+          let resultTags = { ...tags, [tag]: value };
+
+          // filter undefined value
+          // to keep neat shape of tags
+          if (value === undefined) {
+            delete resultTags[tag];
+          }
+
+          return resultTags;
         };
       } else if (isPlainObject(node[key])) {
         // recursive
