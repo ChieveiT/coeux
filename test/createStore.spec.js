@@ -584,7 +584,8 @@ describe('createStore', () => {
   it('guarantees atomicity and sequence of dispatching', () => {
     const store = createStore();
 
-    let p1, p2;
+    let p1 = null;
+    let p2 = null;
     store.mountReducer({
       foo: (foo, { type }) => {
         if (foo === undefined) {
@@ -593,7 +594,7 @@ describe('createStore', () => {
           return [ 1 ];
         }
 
-        switch(type) {
+        switch (type) {
           case 'FOO':
             return [ ...foo, 2 ];
           default:
@@ -606,12 +607,12 @@ describe('createStore', () => {
             p2 = store.dispatch({ type: 'BAR' });
           }, 10);
 
-          return new Promise(function (resolve) {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve([ 20 ]), 20);
           });
         }
 
-        switch(type) {
+        switch (type) {
           case 'BAR':
             return [ ...bar, 10 ];
           default:

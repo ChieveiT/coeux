@@ -86,23 +86,23 @@ describe('combineReducers', () => {
   it('throws error if invalid reducers are passed to combineReducers', () => {
     expect(() => {
       combineReducers(233);
-    }).toThrow(/Invalid reducer/);
+    }).toThrow(/Unexpected type of reducer/);
 
     expect(() => {
       combineReducers('233');
-    }).toThrow(/Invalid reducer/);
+    }).toThrow(/Unexpected type of reducer/);
 
     expect(() => {
       combineReducers(() => {});
-    }).toThrow(/Invalid reducer/);
+    }).toThrow(/Unexpected type of reducer/);
 
     expect(() => {
       combineReducers({ bar: 233 });
-    }).toThrow(/Invalid reducer/);
+    }).toThrow(/Unexpected type of reducer/);
 
     expect(() => {
       combineReducers({ root: { foo: { bar: 233 } } });
-    }).toThrow(/Invalid reducer.*on root\.foo/);
+    }).toThrow(/Unexpected type of reducer.*on root\.foo/);
   });
 
   it('throws an error if a reducer returns ' +

@@ -18,19 +18,19 @@ describe('combineSubscribers', () => {
       bar
     });
 
-    return subscriber({ foo: 4, bar: 5 }).then(() => {
-      expect(foo.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(1);
-      expect(traceFoo).toEqual([ 4 ]);
-      expect(traceBar).toEqual([ 5 ]);
+    subscriber({ foo: 4, bar: 5 });
 
-      return subscriber({ foo: 2, bar: 2 });
-    }).then(() => {
-      expect(foo.calls.length).toEqual(2);
-      expect(bar.calls.length).toEqual(2);
-      expect(traceFoo).toEqual([ 4, 2 ]);
-      expect(traceBar).toEqual([ 5, 2 ]);
-    });
+    expect(foo.calls.length).toEqual(1);
+    expect(bar.calls.length).toEqual(1);
+    expect(traceFoo).toEqual([ 4 ]);
+    expect(traceBar).toEqual([ 5 ]);
+
+    subscriber({ foo: 2, bar: 2 });
+
+    expect(foo.calls.length).toEqual(2);
+    expect(bar.calls.length).toEqual(2);
+    expect(traceFoo).toEqual([ 4, 2 ]);
+    expect(traceBar).toEqual([ 5, 2 ]);
   });
 
   it('notify subscriber only has state been changed', () => {
@@ -48,55 +48,19 @@ describe('combineSubscribers', () => {
       bar
     });
 
-    return subscriber({ foo: 4, bar: 5 }).then(() => {
-      expect(foo.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(1);
-      expect(traceFoo).toEqual([ 4 ]);
-      expect(traceBar).toEqual([ 5 ]);
+    subscriber({ foo: 4, bar: 5 });
 
-      return subscriber({ foo: 4, bar: 2 });
-    }).then(() => {
-      expect(foo.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(2);
-      expect(traceFoo).toEqual([ 4 ]);
-      expect(traceBar).toEqual([ 5, 2 ]);
-    });
-  });
+    expect(foo.calls.length).toEqual(1);
+    expect(bar.calls.length).toEqual(1);
+    expect(traceFoo).toEqual([ 4 ]);
+    expect(traceBar).toEqual([ 5 ]);
 
-  it('support promise in subscribers', () => {
-    let traceFoo = [];
-    let traceBar = [];
-    const foo = expect.createSpy((state) => {
-      return new Promise((resolve) => {
-        traceFoo.push(state);
-        resolve();
-      });
-    }).andCallThrough();
-    const bar = expect.createSpy((state) => {
-      return new Promise((resolve) => {
-        traceBar.push(state);
-        resolve();
-      });
-    }).andCallThrough();
+    subscriber({ foo: 4, bar: 2 });
 
-    const subscriber = combineSubscribers({
-      foo,
-      bar
-    });
-
-    return subscriber({ foo: 4, bar: 5 }).then(() => {
-      expect(foo.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(1);
-      expect(traceFoo).toEqual([ 4 ]);
-      expect(traceBar).toEqual([ 5 ]);
-
-      return subscriber({ foo: 4, bar: 2 });
-    }).then(() => {
-      expect(foo.calls.length).toEqual(1);
-      expect(bar.calls.length).toEqual(2);
-      expect(traceFoo).toEqual([ 4 ]);
-      expect(traceBar).toEqual([ 5, 2 ]);
-    });
+    expect(foo.calls.length).toEqual(1);
+    expect(bar.calls.length).toEqual(2);
+    expect(traceFoo).toEqual([ 4 ]);
+    expect(traceBar).toEqual([ 5, 2 ]);
   });
 
   it('support recursive combination', () => {
@@ -124,7 +88,7 @@ describe('combineSubscribers', () => {
       }
     });
 
-    return subscriber({
+    subscriber({
       tree: {
         one: 1,
         children: {
@@ -132,31 +96,31 @@ describe('combineSubscribers', () => {
           three: 3
         }
       }
-    }).then(() => {
-      expect(one.calls.length).toEqual(1);
-      expect(two.calls.length).toEqual(1);
-      expect(three.calls.length).toEqual(1);
-      expect(traceOne).toEqual([ 1 ]);
-      expect(traceTwo).toEqual([ 2 ]);
-      expect(traceThree).toEqual([ 3 ]);
-
-      return subscriber({
-        tree: {
-          one: 1,
-          children: {
-            two: 20,
-            three: 3
-          }
-        }
-      });
-    }).then(() => {
-      expect(one.calls.length).toEqual(1);
-      expect(two.calls.length).toEqual(2);
-      expect(three.calls.length).toEqual(1);
-      expect(traceOne).toEqual([ 1 ]);
-      expect(traceTwo).toEqual([ 2, 20 ]);
-      expect(traceThree).toEqual([ 3 ]);
     });
+
+    expect(one.calls.length).toEqual(1);
+    expect(two.calls.length).toEqual(1);
+    expect(three.calls.length).toEqual(1);
+    expect(traceOne).toEqual([ 1 ]);
+    expect(traceTwo).toEqual([ 2 ]);
+    expect(traceThree).toEqual([ 3 ]);
+
+    subscriber({
+      tree: {
+        one: 1,
+        children: {
+          two: 20,
+          three: 3
+        }
+      }
+    });
+
+    expect(one.calls.length).toEqual(1);
+    expect(two.calls.length).toEqual(2);
+    expect(three.calls.length).toEqual(1);
+    expect(traceOne).toEqual([ 1 ]);
+    expect(traceTwo).toEqual([ 2, 20 ]);
+    expect(traceThree).toEqual([ 3 ]);
   });
 
   it('ignores all props which are not a function or a plain object', () => {
@@ -167,32 +131,32 @@ describe('combineSubscribers', () => {
       stack: (e) => stack.push(e)
     });
 
-    return subscriber({ fake: 1, broken: 1, stack: 1 }).then(() => {
-      expect(stack).toEqual([ 1 ]);
-    });
+    subscriber({ fake: 1, broken: 1, stack: 1 });
+
+    expect(stack).toEqual([ 1 ]);
   });
 
   it('throws error if invalid subscribers ' +
     'are passed to combineSubscribers', () => {
     expect(() => {
       combineSubscribers(233);
-    }).toThrow(/Invalid subscriber.*/);
+    }).toThrow(/Unexpected type of subscriber/);
 
     expect(() => {
       combineSubscribers('233');
-    }).toThrow(/Invalid subscriber.*/);
+    }).toThrow(/Unexpected type of subscriber/);
 
     expect(() => {
       combineSubscribers(() => {});
-    }).toThrow(/Invalid subscriber.*/);
+    }).toThrow(/Unexpected type of subscriber/);
 
     expect(() => {
       combineSubscribers({ bar: 233 });
-    }).toThrow(/Invalid subscriber.*/);
+    }).toThrow(/Unexpected type of subscriber/);
 
     expect(() => {
       combineSubscribers({ foo: { bar: 233 } });
-    }).toThrow(/Invalid subscriber.*on foo/);
+    }).toThrow(/Unexpected type of subscriber.*on foo/);
   });
 
   it('throws error if subscriber shape does not match state shape', () => {
@@ -202,10 +166,8 @@ describe('combineSubscribers', () => {
       }
     });
 
-    subscriber({ foo: 233 }).catch((e) => {
-      expect(() => {throw e;}).toThrow(
-        /state foo.*type "number"/
-      );
-    });
+    expect(() => {
+      subscriber({ foo: 233 });
+    }).toThrow(/state foo.*type "number"/);
   });
 });

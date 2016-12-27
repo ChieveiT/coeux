@@ -4,7 +4,7 @@ import isEmpty from 'lodash/isEmpty';
 
 export default function combineSubscribers(subscribers, keyStack = []) {
   if (!isPlainObject(subscribers)) {
-    throw new Error(`Invalid subscriber on ${keyStack.join('.')}.`);
+    throw new Error(`Unexpected type of subscriber on ${keyStack.join('.')}.`);
   }
 
   let subscriberKeys = Object.keys(subscribers);
@@ -26,45 +26,36 @@ export default function combineSubscribers(subscribers, keyStack = []) {
   });
 
   if (isEmpty(finalSubscriberKeys)) {
-    throw new Error(`Invalid subscriber on ${keyStack.join('.')}.`);
+    throw new Error(`Unexpected type of subscriber on ${keyStack.join('.')}.`);
   }
 
   // to store the previous state
   let previousStates = {};
 
   return function combination(states = {}) {
-    return new Promise((resolve, reject) => {
-      if (!isPlainObject(states)) {
-        throw new Error(
-          `Expected a plain object on state ${keyStack.join('.')} ` +
-          `but receive type "${typeof states}".` +
-          'Try to change subscriber shape to match state shape.');
+    if (!isPlainObject(states)) {
+      throw new Error(
+        `Expected a plain object on state ${keyStack.join('.')} ` +
+        `but receive type "${typeof states}".` +
+        'Try to change subscriber shape to match state shape.');
+    }
+
+    forEach(finalSubscriberKeys, (key) => {
+      let subscriber = finalSubscribers[key];
+
+      // only has the sub-state been changed
+      // we notify the sub-subscriber
+      if (previousStates[key] === states[key]) {
+        return;
       }
 
-      let promises = [];
+      if (states[key] === undefined) {
+        delete previousStates[key];
+      } else {
+        previousStates[key] = states[key];
+      }
 
-      forEach(finalSubscriberKeys, (key) => {
-        let subscriber = finalSubscribers[key];
-
-        // only has the sub-state been changed
-        // we notify the sub-subscriber
-        if (previousStates[key] === states[key]) {
-          return;
-        }
-
-        if (states[key] === undefined) {
-          delete previousStates[key];
-        } else {
-          previousStates[key] = states[key];
-        }
-
-        promises.push(subscriber(states[key]));
-      });
-
-      Promise.all(promises).then(
-        () => resolve(),
-        (e) => reject(e)
-      );
+      subscriber(states[key]);
     });
   };
 }

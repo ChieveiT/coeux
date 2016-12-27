@@ -5,7 +5,7 @@ import forEach from 'lodash/forEach';
 
 export default function combineReducers(reducers, keyStack = []) {
   if (!isPlainObject(reducers)) {
-    throw new Error(`Invalid reducer on ${keyStack.join('.')}.`);
+    throw new Error(`Unexpected type of reducer on ${keyStack.join('.')}.`);
   }
 
   let reducerKeys = Object.keys(reducers);
@@ -27,7 +27,7 @@ export default function combineReducers(reducers, keyStack = []) {
   });
 
   if (isEmpty(finalReducerKeys)) {
-    throw new Error(`Invalid reducer on ${keyStack.join('.')}.`);
+    throw new Error(`Unexpected type of reducer on ${keyStack.join('.')}.`);
   }
 
   return function combination(states = {}, action) {
