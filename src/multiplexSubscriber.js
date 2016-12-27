@@ -3,11 +3,11 @@ import forEach from 'lodash/forEach';
 
 export default function multiplexSubscriber(target, subscriber) {
   if (!isPlainObject(target)) {
-    throw new Error('Unexpected type of target.');
+    throw new Error('Expected target to be a plain object.');
   }
 
   if (typeof subscriber !== 'function') {
-    throw new Error('Unexpected type of subscriber.');
+    throw new Error('Expected subscriber to be a function.');
   }
 
   // record keys of tags to avoid duplicate tags
@@ -38,7 +38,7 @@ export default function multiplexSubscriber(target, subscriber) {
         // recursive
         keyTracers[key] = createTracer(node[key], nextKeyStack);
       } else {
-        throw new Error(`Unexpected type of target on ${nextKeyStack.join('.')}.`);
+        throw new Error(`Expected target to be a plain object on ${nextKeyStack.join('.')}.`);
       }
     });
 

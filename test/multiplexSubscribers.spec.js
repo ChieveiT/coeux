@@ -65,51 +65,51 @@ describe('multiplexSubscriber', () => {
       multiplexSubscriber({
         foo: 'fooTag'
       }, 'bar');
-    }).toThrow(/Unexpected type.*subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       multiplexSubscriber({
         foo: 'fooTag'
       }, 233);
-    }).toThrow(/Unexpected type.*subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       multiplexSubscriber({
         foo: 'fooTag'
       }, {});
-    }).toThrow(/Unexpected type.*subscriber/);
+    }).toThrow(/Expected subscriber/);
   });
 
   it('throws error if target is not a tree with string type leaves', () => {
     expect(() => {
       multiplexSubscriber(233, function() {});
-    }).toThrow(/Unexpected type.*target/);
+    }).toThrow(/Expected target/);
 
     expect(() => {
       multiplexSubscriber([], function() {});
-    }).toThrow(/Unexpected type.*target/);
+    }).toThrow(/Expected target/);
 
     expect(() => {
       multiplexSubscriber(function() {}, function() {});
-    }).toThrow(/Unexpected type.*target/);
+    }).toThrow(/Expected target/);
 
     expect(() => {
       multiplexSubscriber({
         foo: 233
       }, function() {});
-    }).toThrow(/Unexpected type.*target.*on foo/);
+    }).toThrow(/Expected target.*foo/);
 
     expect(() => {
       multiplexSubscriber({
         foo: [ '233' ]
       }, function() {});
-    }).toThrow(/Unexpected type.*target.*on foo/);
+    }).toThrow(/Expected target.*foo/);
 
     expect(() => {
       multiplexSubscriber({
         foo: function() {}
       }, function() {});
-    }).toThrow(/Unexpected type.*target.*on foo/);
+    }).toThrow(/Expected target.*foo/);
   });
 
   it('throws error when checking duplicate tag', () => {

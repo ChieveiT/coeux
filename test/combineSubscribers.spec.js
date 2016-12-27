@@ -140,23 +140,23 @@ describe('combineSubscribers', () => {
     'are passed to combineSubscribers', () => {
     expect(() => {
       combineSubscribers(233);
-    }).toThrow(/Unexpected type of subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       combineSubscribers('233');
-    }).toThrow(/Unexpected type of subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       combineSubscribers(() => {});
-    }).toThrow(/Unexpected type of subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       combineSubscribers({ bar: 233 });
-    }).toThrow(/Unexpected type of subscriber/);
+    }).toThrow(/Expected subscriber/);
 
     expect(() => {
       combineSubscribers({ foo: { bar: 233 } });
-    }).toThrow(/Unexpected type of subscriber.*on foo/);
+    }).toThrow(/Expected subscriber.*on foo/);
   });
 
   it('throws error if subscriber shape does not match state shape', () => {
