@@ -35,7 +35,7 @@ describe('multiplexSubscriber', () => {
 
     expect(tracer.calls.length).toEqual(3);
     expect(traceState).toEqual([
-      { fooTag: 4},
+      { fooTag: 4 },
       { fooTag: 4, barTag: 6 },
       { barTag: 6 }
     ]);

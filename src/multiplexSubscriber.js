@@ -25,7 +25,9 @@ export default function multiplexSubscriber(target, subscriber) {
 
         // check duplicate tag
         if (checkTags[tag] === true) {
-          throw new Error(`Duplicate tag of target on ${nextKeyStack.join('.')}.`);
+          throw new Error(
+            `Duplicate tag of target on ${nextKeyStack.join('.')}.`
+          );
         } else {
           checkTags[tag] = true;
         }
@@ -46,7 +48,9 @@ export default function multiplexSubscriber(target, subscriber) {
         // recursive
         keyTracers[key] = createTracer(node[key], nextKeyStack);
       } else {
-        throw new Error(`Expected target to be a plain object on ${nextKeyStack.join('.')}.`);
+        throw new Error(
+          `Expected target to be a plain object on ${nextKeyStack.join('.')}.`
+        );
       }
     });
 

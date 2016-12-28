@@ -4,7 +4,9 @@ import isEmpty from 'lodash/isEmpty';
 
 export default function combineSubscribers(subscribers, keyStack = []) {
   if (!isPlainObject(subscribers)) {
-    throw new Error(`Expected subscriber to be a function on ${keyStack.join('.')}.`);
+    throw new Error(
+      `Expected subscriber to be a function on ${keyStack.join('.')}.`
+    );
   }
 
   let subscriberKeys = Object.keys(subscribers);
@@ -26,7 +28,9 @@ export default function combineSubscribers(subscribers, keyStack = []) {
   });
 
   if (isEmpty(finalSubscriberKeys)) {
-    throw new Error(`Expected subscriber to be a function on ${keyStack.join('.')}.`);
+    throw new Error(
+      `Expected subscriber to be a function on ${keyStack.join('.')}.`
+    );
   }
 
   // to store the previous state
