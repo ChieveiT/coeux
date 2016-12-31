@@ -499,7 +499,7 @@ describe('createStore', () => {
   });
 
   it('supports middlewares', () => {
-    const mid1 = expect.createSpy((action, next) => {
+    const mid1 = expect.createSpy((next, action) => {
       if (action.type === 'short') {
         return {
           type: 'short_return'
@@ -521,7 +521,7 @@ describe('createStore', () => {
       });
     }).andCallThrough();
 
-    const mid2 = expect.createSpy((action, next) => {
+    const mid2 = expect.createSpy((next, action) => {
       return next(action);
     }).andCallThrough();
 

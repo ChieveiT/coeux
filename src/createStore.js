@@ -1,5 +1,3 @@
-import isArray from 'lodash/isArray';
-import reduceRight from 'lodash/reduceRight';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
@@ -8,6 +6,7 @@ import difference from 'lodash/difference';
 import combineReducers from './combineReducers';
 import combineSubscribers from './combineSubscribers';
 import multiplexSubscriber from './multiplexSubscriber';
+import { middlewares } from 'coeus-utils';
 
 // Hack an additional "root" node to make some convience.
 //
@@ -26,7 +25,7 @@ function hack(e) {
   };
 }
 
-export default function createStore(middlewares) {
+export default function createStore(mids = []) {
   const initReducer = () => ({/* root: undefined*/});
 
   let currentState = {/* root: undefined*/};
@@ -195,21 +194,7 @@ export default function createStore(middlewares) {
     return previousDispatch;
   }
 
-  // support middlewares
-  let pipeline = dispatch;
-  if (isArray(middlewares) && !isEmpty(middlewares)) {
-    pipeline = reduceRight(
-      middlewares,
-      function wrapMiddlewares(next, middleware) {
-        return action => Promise.resolve().then(() => {
-          return Promise.all([
-            middleware(action, next)
-          ]).then(([ returnAction ]) => returnAction);
-        });
-      },
-      (action) => dispatch(action)
-    );
-  }
+  let pipeline = middlewares(mids, dispatch);
 
   function initState() {
     return pipeline({ type: '@@coeus/INIT' });
