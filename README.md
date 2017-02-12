@@ -249,6 +249,34 @@ store.dispatch({ type: 'ADD' }).then(() => {
 });
 ```
 
+### _multiplex listener_
+
+Listen to multiple points in state tree. Within a dispatching cycle, the listener will be notified when any these listened point has been changed.
+
+```javascript
+store.mountReducer({
+  foo: (foo = 0) => ++foo,
+  bar: (bar = 0) => bar
+});
+
+store.subscribe({
+  foo: 'fooTag',
+  bar: 'barTag'
+}, function ({ fooTag, barTag }) {
+  console.log(fooTag);
+  console.log(barTag);
+});
+
+store.initState().then(() => {
+  // show fooTag => 1
+  // show barTag => 0
+});
+store.initState().then(() => {
+  // show fooTag => 2
+  // show barTag => 0
+});
+```
+
 ## Middlewares
 
 Support middlewares in dispatching. Pass them when you call `createStore()`. Additionally, Promise is supported in middlewares(This should be clear because `next` always return a Promise object as you will see).
