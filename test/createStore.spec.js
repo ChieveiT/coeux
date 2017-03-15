@@ -434,49 +434,6 @@ describe('createStore', () => {
     });
   });
 
-  it('abort previous reducing', () => {
-    const store = createStore();
-
-    store.mountReducer({
-      foo: (state = 0, action) => {
-        switch (action.type) {
-          case 'FOO':
-            return new Promise((resolve) => {
-              setTimeout(function () {
-                resolve(state + 1);
-              }, 1000);
-            });
-          default:
-            return state;
-        }
-      },
-      bar: (state = 0, action) => {
-        switch (action.type) {
-          case 'BAR':
-            return state + 1;
-          default:
-            return state;
-        }
-      }
-    });
-
-    return Promise.all([
-      store.dispatch({
-        type: 'FOO'
-      }).catch((err) => {
-        expect(() => { throw err; }).toThrow('Abort');
-      }),
-      store.dispatch({
-        type: 'BAR'
-      }, true).then(() => {
-        expect(store.getState()).toEqual({
-          foo: 0,
-          bar: 1
-        });
-      })
-    ]);
-  });
-
   it('throws error if mountReducer doesn\'t ' +
     'receive a plain object or function', () => {
     const store = createStore();
