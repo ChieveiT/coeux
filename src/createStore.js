@@ -3,10 +3,11 @@ import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
 import intersection from 'lodash/intersection';
 import difference from 'lodash/difference';
+import noop from 'lodash/noop';
 import combineReducers from './combineReducers';
 import combineSubscribers from './combineSubscribers';
 import multiplexSubscriber from './multiplexSubscriber';
-import { middlewares } from 'coeus-utils';
+import { middlewares, abortable } from 'coeus-utils';
 
 // Hack an additional "root" node to make some convience.
 //
@@ -32,7 +33,7 @@ export default function createStore(mids = []) {
   let currentReducer = initReducer;
   let currentReducerTree = {};
   let currentSubscribers = [];
-  let previousDispatch = Promise.resolve();
+  let previousReducing = Promise.resolve();
 
   function getState() {
     // extract the actual state from hacking
@@ -153,7 +154,7 @@ export default function createStore(mids = []) {
     };
   }
 
-  function dispatch(action) {
+  function dispatch(action, abort) {
     if (!isPlainObject(action)) {
       throw new Error(
         'Actions must be plain objects.'
@@ -166,32 +167,35 @@ export default function createStore(mids = []) {
       );
     }
 
-    // to make sure all dispatching run in the sequence
-    // they emitted
-    previousDispatch = previousDispatch.then(() => {
-      return Promise.resolve().then(() => {
-        return Promise.all([
-          currentReducer(currentState, action)
-        ]).then(([ state ]) => {
-          currentState = state;
+    if (abort) {
+      previousReducing.abort(
+        new Error('Abort Previous Reducing')
+      );
+    }
 
-          // copy a listeners list to avoid the effect of
-          // unsubscribing in listeners
-          let listeners = currentSubscribers.slice();
-          let promises = [];
+    // make up an abortable sequence of reducing
+    previousReducing = abortable(
+      previousReducing.then(
+        noop, noop
+      ).then( // finally
+        () => currentReducer(currentState, action)
+      )
+    );
 
-          forEach(listeners, (listener) => {
-            promises.push(
-              listener(currentState)
-            );
-          });
+    // assign new state and notify listeners
+    return previousReducing.then((state) => {
+      currentState = state;
 
-          return Promise.all(promises);
-        }).then(() => action);
+      // copy a listeners list to avoid the effect of
+      // unsubscribing in listeners
+      let listeners = currentSubscribers.slice();
+
+      forEach(listeners, (listener) => {
+        listener(currentState);
       });
-    });
 
-    return previousDispatch;
+      return action;
+    });
   }
 
   let pipeline = middlewares(mids, dispatch);
