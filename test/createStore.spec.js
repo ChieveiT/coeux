@@ -442,7 +442,7 @@ describe('createStore', () => {
         switch (action.type) {
           case 'FOO':
             return new Promise((resolve) => {
-              setTimeout(function() {
+              setTimeout(function () {
                 resolve(state + 1);
               }, 1000);
             });
